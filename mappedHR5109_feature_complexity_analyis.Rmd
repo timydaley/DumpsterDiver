@@ -1,0 +1,67 @@
+---
+title: "Complexity analysis of HR5109"
+author: "Timothy Daley"
+date: "June 8, 2015"
+output: html_document
+---
+
+To obtain feature counts I first split multiple features with an awk script to obtain one line per feature (reads can appear multiple times.
+
+```{r engine='sh',eval=FALSE}
+awk '{where=match($4,"serghei");
+if(where)
+{
+  split($4, a, "serghei");
+  for(stuff in a) print $1"\t"$2"\t"$3"\t"a[stuff];
+}
+else
+{
+  print $0;
+}
+}' mapped_HR5109_features_unsep.txt > mapped_HR5109_features_sep.txt
+```
+
+This gives 9 different features with the following counts:
+
+feature | counts
+-------|---------
+CDS | 3194397
+UTR  | 7609716
+acrossB | 195801
+exon | 10220484
+intron | 5784570
+intron_retention | 1913020
+junction | 32199494
+mateAcrossB | 1414948
+multiMapped | 2544843
+
+Of these features, the ones with location information that we can use to identify duplicate events are exons, junctions, CDSs, and UTRs.  To obtain the counts we use a simple bash script.  For example the junction counts can be obtained by the following script.
+
+```{r engine='sh', eval=FALSE}
+awk '{if (match($4, "junction")) print $4}' mapped_HR5109_features_sep.txt | sort | uniq -c | awk '{print $1}' > mapped_HR5109_features_junction_counts.txt
+```
+
+The feature counts can be fed into the preseq program with the -V option.
+
+```{r engine='sh', eval=FALSE}
+for feature in exon junction CDS UTR; do echo $feature; ~/panfs/programs/preseq lc_extrap -V -v -s 100000 -o mapped_HR5109_features_${feature}_counts_lc_extrap.txt mapped_HR5109_features_${feature}_counts.txt &> mapped_HR5109_features_${feature}_counts_lc_extrap_out.txt; done
+```
+
+We
+
+Additionally we can estimate lower bounds using a method still in development (see https://www.dropbox.com/s/95lievz7n744851/better_lower_bounds.pdf?dl=0 for a draft of the paper or https://github.com/timydaley/preseq_dev/blob/master/test_quadrature.cpp for the code).
+
+```{r engine='sh',eval=FALSE}
+for feature in exon junction CDS UTR; do echo $feature; ~/panfs/programs/test_quadrature -p 10 -o mapped_HR5109_features_${feature}_quad_lower_bound.txt -V mapped_HR5109_features_${feature}_counts.txt; done
+```
+
+This gives the following lower bounds on the total number of features in the library HR5109:
+
+feature | observed | lower bound
+--------| -------- | ---------
+CDS | 98791 | 122514.1
+UTR | 32253 | 41299.1
+exon | 95361 | 121753.7
+junction | 480101 | 576923.0
+
+The fact that most of the features
