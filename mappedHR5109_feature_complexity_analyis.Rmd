@@ -44,10 +44,106 @@ awk '{if (match($4, "junction")) print $4}' mapped_HR5109_features_sep.txt | sor
 The feature counts can be fed into the preseq program with the -V option.
 
 ```{r engine='sh', eval=FALSE}
-for feature in exon junction CDS UTR; do echo $feature; ~/panfs/programs/preseq lc_extrap -V -v -s 100000 -o mapped_HR5109_features_${feature}_counts_lc_extrap.txt mapped_HR5109_features_${feature}_counts.txt &> mapped_HR5109_features_${feature}_counts_lc_extrap_out.txt; done
+for feature in exon junction CDS UTR; do echo $feature; ~/panfs/programs/preseq lc_extrap -V -v -s 100000 -o mapped_HR5109_features_${feature}_counts_lc_extrap.txt mapped_HR5109_features_${feature}_counts.txt &> mapped_HR5109_features_${feature}_counts_lc_extrap_out.txt; ~/panfs/programs/preseq c_curve -V -v -s 100000 -o mapped_HR5109_features_${feature}_counts_c_curve.txt mapped_HR5109_features_${feature}_counts.txt &> mapped_HR5109_features_${feature}_counts_c_curve_out.txt; done
 ```
 
-We
+We plot the library complexity as a function of total fragments sequenced, calculated to be $x$ by samtools. 
+
+```{r fig.height=5, fig.width=5}
+# CDS
+mapped_HR5109_features_CDS_counts_lc_extrap = read.table(file="mapped_HR5109_features_CDS_counts_lc_extrap.txt", header=T)
+tail(mapped_HR5109_features_CDS_counts_lc_extrap)
+mapped_HR5109_features_CDS_counts_c_curve = read.table(file="mapped_HR5109_features_CDS_counts_c_curve.txt", header=T)
+tail(mapped_HR5109_features_CDS_counts_c_curve)
+scaling_val = 96070080/3194397
+plot(scaling_val*mapped_HR5109_features_CDS_counts_c_curve$total_reads, mapped_HR5109_features_CDS_counts_c_curve$distinct_reads, xlim=c(0, 1e9), ylim=c(0, 2e5), lwd=3, type="l", main="HR5109 CDS", xlab="distinct events", ylab="sequenced fragments")
+polygon(c(scaling_val*mapped_HR5109_features_CDS_counts_lc_extrap$TOTAL_READS, rev(scaling_val*mapped_HR5109_features_CDS_counts_lc_extrap$TOTAL_READS)), c(mapped_HR5109_features_CDS_counts_lc_extrap$LOWER_0.95CI, rev(mapped_HR5109_features_CDS_counts_lc_extrap$UPPER_0.95CI)), col="lightpink", density=-1)
+lines(scaling_val*mapped_HR5109_features_CDS_counts_c_curve$total_reads, mapped_HR5109_features_CDS_counts_c_curve$distinct_reads, lwd=2)
+lines(scaling_val*mapped_HR5109_features_CDS_counts_lc_extrap$TOTAL_READS, mapped_HR5109_features_CDS_counts_lc_extrap$EXPECTED_DISTINCT, lty=2, lwd=3, col="red")
+abline(v = 0, lty=3, lwd=2)
+abline(v = 96070080, lty=3, lwd=2)
+abline(h = tail(mapped_HR5109_features_CDS_counts_lc_extrap$EXPECTED_DISTINCT, 1), lty=3, lwd=2, col="darkgreen")
+legend("bottomright", legend=c("observed", "predicted", "95% CI", "asymptote"), lty=c(1, 2, NA, 3), pch=c(NA, NA, 15, NA),  lwd=c(2,2,NA,2), col=c("black", "red", "lightpink", "darkgreen"))
+
+# UTR
+mapped_HR5109_features_UTR_counts_lc_extrap = read.table(file="mapped_HR5109_features_UTR_counts_lc_extrap.txt", header=T)
+tail(mapped_HR5109_features_UTR_counts_lc_extrap)
+mapped_HR5109_features_UTR_counts_c_curve = read.table(file="mapped_HR5109_features_UTR_counts_c_curve.txt", header=T)
+tail(mapped_HR5109_features_UTR_counts_c_curve)
+scaling_val = 96070080/7609716
+plot(scaling_val*mapped_HR5109_features_UTR_counts_c_curve$total_reads, mapped_HR5109_features_UTR_counts_c_curve$distinct_reads, xlim=c(0, 1e9), ylim=c(0, 1e5), lwd=3, type="l", main="HR5109 UTR", xlab="distinct events", ylab="sequenced fragments")
+polygon(c(scaling_val*mapped_HR5109_features_UTR_counts_lc_extrap$TOTAL_READS, rev(scaling_val*mapped_HR5109_features_UTR_counts_lc_extrap$TOTAL_READS)), c(mapped_HR5109_features_UTR_counts_lc_extrap$LOWER_0.95CI, rev(mapped_HR5109_features_UTR_counts_lc_extrap$UPPER_0.95CI)), col="lightpink", density=-1)
+lines(scaling_val*mapped_HR5109_features_UTR_counts_c_curve$total_reads, mapped_HR5109_features_UTR_counts_c_curve$distinct_reads, lwd=2)
+lines(scaling_val*mapped_HR5109_features_UTR_counts_lc_extrap$TOTAL_READS, mapped_HR5109_features_UTR_counts_lc_extrap$EXPECTED_DISTINCT, lty=2, lwd=3, col="red")
+abline(v = 0, lty=3, lwd=2)
+abline(v = 96070080, lty=3, lwd=2)
+abline(h = tail(mapped_HR5109_features_UTR_counts_lc_extrap$EXPECTED_DISTINCT, 1), lty=3, lwd=2, col="darkgreen")
+legend("bottomright", legend=c("observed", "predicted", "95% CI", "asymptote"), lty=c(1, 2, NA, 3), pch=c(NA, NA, 15, NA),  lwd=c(2,2,NA,2), col=c("black", "red", "lightpink", "darkgreen"))
+
+# exons
+mapped_HR5109_features_exon_counts_lc_extrap = read.table(file="mapped_HR5109_features_exon_counts_lc_extrap.txt", header=T)
+tail(mapped_HR5109_features_exon_counts_lc_extrap)
+mapped_HR5109_features_exon_counts_c_curve = read.table(file="mapped_HR5109_features_exon_counts_c_curve.txt", header=T)
+tail(mapped_HR5109_features_exon_counts_c_curve)
+scaling_val = 96070080/10220484
+plot(scaling_val*mapped_HR5109_features_exon_counts_c_curve$total_reads, mapped_HR5109_features_exon_counts_c_curve$distinct_reads, xlim=c(0, 1e9), ylim=c(0, 2e5), lwd=3, type="l", main="HR5109 exon", xlab="distinct events", ylab="sequenced fragments")
+polygon(c(scaling_val*mapped_HR5109_features_exon_counts_lc_extrap$TOTAL_READS, rev(scaling_val*mapped_HR5109_features_exon_counts_lc_extrap$TOTAL_READS)), c(mapped_HR5109_features_exon_counts_lc_extrap$LOWER_0.95CI, rev(mapped_HR5109_features_exon_counts_lc_extrap$UPPER_0.95CI)), col="lightpink", density=-1)
+lines(scaling_val*mapped_HR5109_features_exon_counts_c_curve$total_reads, mapped_HR5109_features_exon_counts_c_curve$distinct_reads, lwd=2)
+lines(scaling_val*mapped_HR5109_features_exon_counts_lc_extrap$TOTAL_READS, mapped_HR5109_features_exon_counts_lc_extrap$EXPECTED_DISTINCT, lty=2, lwd=3, col="red")
+abline(v = 0, lty=3, lwd=2)
+abline(v = 96070080, lty=3, lwd=2)
+abline(h = tail(mapped_HR5109_features_exon_counts_lc_extrap$EXPECTED_DISTINCT, 1), lty=3, lwd=2, col="darkgreen")
+legend("bottomright", legend=c("observed", "predicted", "95% CI", "asymptote"), lty=c(1, 2, NA, 3), pch=c(NA, NA, 15, NA),  lwd=c(2,2,NA,2), col=c("black", "red", "lightpink", "darkgreen"))
+
+# junctions
+mapped_HR5109_features_junction_counts_lc_extrap = read.table(file="mapped_HR5109_features_junction_counts_lc_extrap.txt", header=T)
+tail(mapped_HR5109_features_junction_counts_lc_extrap)
+mapped_HR5109_features_junction_counts_c_curve = read.table(file="mapped_HR5109_features_junction_counts_c_curve.txt", header=T)
+tail(mapped_HR5109_features_junction_counts_c_curve)
+scaling_val = 96070080/32199494
+plot(scaling_val*mapped_HR5109_features_junction_counts_c_curve$total_reads, mapped_HR5109_features_junction_counts_c_curve$distinct_reads, xlim=c(0, 1e9), ylim=c(0, 1e6), lwd=3, type="l", main="HR5109 junction", xlab="distinct events", ylab="sequenced fragments")
+polygon(c(scaling_val*mapped_HR5109_features_junction_counts_lc_extrap$TOTAL_READS, rev(scaling_val*mapped_HR5109_features_junction_counts_lc_extrap$TOTAL_READS)), c(mapped_HR5109_features_junction_counts_lc_extrap$LOWER_0.95CI, rev(mapped_HR5109_features_junction_counts_lc_extrap$UPPER_0.95CI)), col="lightpink", density=-1)
+lines(scaling_val*mapped_HR5109_features_junction_counts_c_curve$total_reads, mapped_HR5109_features_junction_counts_c_curve$distinct_reads, lwd=2)
+lines(scaling_val*mapped_HR5109_features_junction_counts_lc_extrap$TOTAL_READS, mapped_HR5109_features_junction_counts_lc_extrap$EXPECTED_DISTINCT, lty=2, lwd=3, col="red")
+abline(v = 0, lty=3, lwd=2)
+abline(v = 96070080, lty=3, lwd=2)
+abline(h = tail(mapped_HR5109_features_junction_counts_lc_extrap$EXPECTED_DISTINCT, 1), lty=3, lwd=2, col="darkgreen")
+legend("bottomright", legend=c("observed", "predicted", "95% CI", "asymptote"), lty=c(1, 2, NA, 3), pch=c(NA, NA, 15, NA),  lwd=c(2,2,NA,2), col=c("black", "red", "lightpink", "darkgreen"))
+```
+
+We compare this to the read complexity.
+
+```{r fig.height=5, fig.width=5}
+# SE read complexity
+mapped_HR5109_se_read_dup_lc_extrap = read.table(file="mapped_HR5109_se_read_dup_lc_extrap.txt", header=T)
+tail(mapped_HR5109_se_read_dup_lc_extrap)
+mapped_HR5109_se_read_dup_c_curve = read.table(file="mapped_HR5109_se_read_dup_c_curve.txt", header=T)
+tail(mapped_HR5109_se_read_dup_c_curve)
+scaling_val = 96070080/58196054
+plot(scaling_val*mapped_HR5109_se_read_dup_c_curve$total_reads, mapped_HR5109_se_read_dup_c_curve$distinct_reads, xlim=c(0, 1e9), ylim=c(0, 1e8), lwd=3, type="l", main="HR5109 SE read complexity", xlab="distinct events", ylab="sequenced fragments")
+polygon(c(scaling_val*mapped_HR5109_se_read_dup_lc_extrap$TOTAL_READS, rev(scaling_val*mapped_HR5109_se_read_dup_lc_extrap$TOTAL_READS)), c(mapped_HR5109_se_read_dup_lc_extrap$LOWER_0.95CI, rev(mapped_HR5109_se_read_dup_lc_extrap$UPPER_0.95CI)), col="lightpink", density=-1)
+lines(scaling_val*mapped_HR5109_se_read_dup_c_curve$total_reads, mapped_HR5109_se_read_dup_c_curve$distinct_reads, lwd=2)
+lines(scaling_val*mapped_HR5109_se_read_dup_lc_extrap$TOTAL_READS, mapped_HR5109_se_read_dup_lc_extrap$EXPECTED_DISTINCT, lty=2, lwd=3, col="red")
+abline(v = 0, lty=3, lwd=2)
+abline(v = 96070080, lty=3, lwd=2)
+abline(h = tail(mapped_HR5109_se_read_dup_lc_extrap$EXPECTED_DISTINCT, 1), lty=3, lwd=2, col="darkgreen")
+legend("bottomright", legend=c("observed", "predicted", "95% CI", "asymptote"), lty=c(1, 2, NA, 3), pch=c(NA, NA, 15, NA),  lwd=c(2,2,NA,2), col=c("black", "red", "lightpink", "darkgreen"))
+
+# PE read complexity
+mapped_HR5109_pe_read_dup_lc_extrap = read.table(file="mapped_HR5109_pe_read_dup_lc_extrap.txt", header=T)
+tail(mapped_HR5109_pe_read_dup_lc_extrap)
+mapped_HR5109_pe_read_dup_c_curve = read.table(file="mapped_HR5109_pe_read_dup_c_curve.txt", header=T)
+tail(mapped_HR5109_pe_read_dup_c_curve)
+scaling_val = 96070080/58196053
+plot(scaling_val*mapped_HR5109_pe_read_dup_c_curve$total_reads, mapped_HR5109_pe_read_dup_c_curve$distinct_reads, xlim=c(0, 1e9), ylim=c(0, 3e8), lwd=3, type="l", main="HR5109 PE read complexity", xlab="distinct events", ylab="sequenced fragments")
+polygon(c(scaling_val*mapped_HR5109_pe_read_dup_lc_extrap$TOTAL_READS, rev(scaling_val*mapped_HR5109_pe_read_dup_lc_extrap$TOTAL_READS)), c(mapped_HR5109_pe_read_dup_lc_extrap$LOWER_0.95CI, rev(mapped_HR5109_pe_read_dup_lc_extrap$UPPER_0.95CI)), col="lightpink", density=-1)
+lines(scaling_val*mapped_HR5109_pe_read_dup_c_curve$total_reads, mapped_HR5109_pe_read_dup_c_curve$distinct_reads, lwd=2)
+lines(scaling_val*mapped_HR5109_pe_read_dup_lc_extrap$TOTAL_READS, mapped_HR5109_pe_read_dup_lc_extrap$EXPECTED_DISTINCT, lty=2, lwd=3, col="red")
+abline(v = 0, lty=3, lwd=2)
+abline(v = 96070080, lty=3, lwd=2)
+abline(h = tail(mapped_HR5109_pe_read_dup_lc_extrap$EXPECTED_DISTINCT, 1), lty=3, lwd=2, col="darkgreen")
+legend("bottomright", legend=c("observed", "predicted", "95% CI", "asymptote"), lty=c(1, 2, NA, 3), pch=c(NA, NA, 15, NA),  lwd=c(2,2,NA,2), col=c("black", "red", "lightpink", "darkgreen"))
+```
 
 Additionally we can estimate lower bounds using a method still in development (see https://www.dropbox.com/s/95lievz7n744851/better_lower_bounds.pdf?dl=0 for a draft of the paper or https://github.com/timydaley/preseq_dev/blob/master/test_quadrature.cpp for the code).
 
@@ -55,13 +151,26 @@ Additionally we can estimate lower bounds using a method still in development (s
 for feature in exon junction CDS UTR; do echo $feature; ~/panfs/programs/test_quadrature -p 10 -o mapped_HR5109_features_${feature}_quad_lower_bound.txt -V mapped_HR5109_features_${feature}_counts.txt; done
 ```
 
-This gives the following lower bounds on the total number of features in the library HR5109:
+This gives the following lower bounds on the total number of features in the library HR5109 along with the number of unobserved and the calculated asymptotes (that can serve as an estimate for the total number of events in the library):
 
-feature | observed | lower bound
---------| -------- | ---------
-CDS | 98791 | 122514.1
-UTR | 32253 | 41299.1
-exon | 95361 | 121753.7
-junction | 480101 | 576923.0
+feature | observed | asymptote | lower bound
+--------| -------- | --------- | -----------
+CDS | 98791 | 134572.5 | 122514.1
+UTR | 32253 | 44530.9 | 41299.1
+exon | 95361 | 135924.1 | 121753.7
+junction | 480101 | 677255.0 | 576923.0
+SE reads | 17673548 | 64534463 | 47314599.1
+PE reads | 35909163 | 247098343 | 176951859.5
 
-The fact that most of the features
+The fact that most of the features have already been observed indicates that the library is nearly saturated at the current sequencing depth.  To investigate the current saturation we use the Good-Turing estimate for the mathematical coverage, aka sample coverage or one minus the discovery probability [Good, Biometrika, 1953](http://www.ling.upenn.edu/courses/cogs502/GoodTuring1953.pdf).  The mathematical coverage of a sample from a population is defined as the sum of the probabilities of the observed class, i.e. if $x_{i}$ is the number of observed individuals from class $i$ then $C = \sum_{i = 1}^{\infty} p_{i} 1 \big( x_{i} > 0 \big)$.  This represents the relative proportion of the events that have been observed.  The Good-Turing estimate for the mathematical coverage is one minus the number of singletons divided by the number of samples.
+
+feature | total | singletons | $C$
+--------| -------- | --------- | -----------
+CDS | 3194397 | 20307 | 0.9936429
+UTR | 7609716 | 5920 | 0.999222
+exon | 10220484 | 19204 | 0.998121
+junction | 32199494 | 99616 | 0.9969063
+SE reads | 58196054 | 9951442 | 0.8290014
+PE reads | 58196053 | 28151457 | 0.5162652
+
+This indicates that though a large number of the molecules in the library have not be sequenced, a large proportion of the events (CDS, UTR, exon, and junction) have been observed.  The ones that remain are very low probability events and will take significant sequencing resource to observe and even more to quantify.
